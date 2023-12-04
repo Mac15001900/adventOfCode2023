@@ -1,4 +1,4 @@
-import MyUtils
+import MUtils
 
 type Cubes = [Integer]
 type Game = (Integer, [Cubes])

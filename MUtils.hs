@@ -1,4 +1,5 @@
-module MyUtils (
+-- Version 1.0.0
+module MUtils (
    runOnFile, runTestOnFile, runOnFileGroup,
    putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, combinations, combinations3, combinationsSelf,
    (!!?), joinWith, zipWithIndexes, differences, indexes, zipF,
@@ -11,7 +12,6 @@ module MyUtils (
    aStar, (|>), readInt
     ) where
 
-   --readInt,runOnFile,runTestOnFile,runOnFile2,runOnFileGroup,(|>),putList,putListToStr,split,count,freq,exists,singleton,(!!?),unique,unique',uniqueOn,uniqueOn',rotateMatrix,splitOn,joinWith,valueBetween, differences, tupleMap, repeatF, examine, examineStr, examineRepeat, removeNothing, indexes, zipF, zipWithIndexes, zipWithIndexes2, indexesWhere, zip2d, zip3d, map2, map3, filter2, filter3, setElement, setElement2, setElement3, changeElement, empty2, empty3, directions2D, directions3D, flattenMaybe, combinations, groupInto2D, findIndex2, aStar, tryAStar, fst3, snd3, thd3, fst4, snd4, thd4, frh4, mapFst, mapSnd, factorial, (//), nck) where
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -127,7 +127,7 @@ combinations [] _ = []
 combinations (a:as) bs = map (a,) bs ++ combinations as bs
 
 combinations3 :: [a] -> [b] -> [c] -> [(a,b,c)]
-combinations3 as bs cs = map (\a-> map (\b-> map (\c-> (a,b,c)) cs) bs) as |> concat |> concat
+combinations3 as bs cs = map (\a-> map (\b-> map (a,b,) cs) bs) as |> concat |> concat
 
 --Produces all combinations of two elements from an array, without symmetric of reflective ones. [x,y,z] produces [(x,y),(x,z),(y,z)], but not (y,x) or (x,x)
 combinationsSelf :: [a] -> [(a,a)]
@@ -145,21 +145,20 @@ joinWith a [] = []
 joinWith a [x] = x
 joinWith a (x:xs) = (x++a)++(joinWith a xs)
 
-zipWithIndexes :: [a] -> [(a,Int)]
-zipWithIndexes a = zip a (indexes a)
-
---Truns a list of numeric values into a list of differences between neighbouring values
-differences :: Num a => [a] -> [a]
-differences [] = []
-differences a = zip (tail a) (init a) |>  map (uncurry (-))
-
 indexes :: [a] -> [Int]
 indexes [] = []
 indexes a = [0..(length a)-1]
 
+zipWithIndexes :: [a] -> [(a,Int)]
+zipWithIndexes a = zip a (indexes a)
+
+--Turns a list of numeric values into a list of differences between neighbouring values
+differences :: Num a => [a] -> [a]
+differences [] = []
+differences a = zip (tail a) (init a) |>  map (uncurry (-))
+
 zipF :: (a->b) -> [a] -> [(a,b)]
 zipF f xs = zip xs (map f xs)
-
 
 
 ------------------------------------ Higher-dimension List Utils ------------------------------------
