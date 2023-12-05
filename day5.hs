@@ -19,12 +19,11 @@ type Range = (Integer, Integer) --Range start, range end
 convert2 :: [MapPart] -> Range -> [Range]
 convert2 [] rn = [ rn ]
 convert2 ((d, s, r) : xs) (rs, re)
-    | re < rs = error ("It happened again " ++ show rs ++ " " ++ show re)
-    | rs >= s && re <= s + r - 1 = [ (rs + d - s, re + d - s) ]
-    | rs >= s && rs <= s + r - 1 = (rs + d - s, d + r - 1) : convert2 xs (s + r, re)
-    | re <= s + r - 1 && re >= s = (d, re + d - s) : convert2 xs (rs, s - 1)
-    | rs < s && re > s + r - 1 = (d, d + r - 1) : convert2 xs (rs, s - 1) ++ convert2 xs (s + r, re)
-    | otherwise = convert2 xs (rs, re)
+    | rs >= s && re <= s + r - 1 = [ (rs + d - s, re + d - s) ] --Range is entirely within map
+    | rs >= s && rs <= s + r - 1 = (rs + d - s, d + r - 1) : convert2 xs (s + r, re) --Start in within the map, but the end isn't
+    | re <= s + r - 1 && re >= s = (d, re + d - s) : convert2 xs (rs, s - 1) --End in within the map, but start isn't
+    | rs < s && re > s + r - 1 = (d, d + r - 1) : convert2 xs (rs, s - 1) ++ convert2 xs (s + r, re) --The map is entirely within the range
+    | otherwise = convert2 xs (rs, re) --There is no overlap at all
 
 part2 :: [String] -> Integer
 part2 lines = head lines |> splitOn ' ' |> tail |> map read |> groupInto2D 2 |> map (\[a, b] -> (a, a + b - 1))
