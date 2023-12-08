@@ -43,7 +43,7 @@ type Target = (Integer, Integer) --Start of cycle, length of cycle
 combine :: Integer -> Target -> Target -> Maybe Target
 combine attempt (s1, l1) (s2, l2)
     | gd > 1 && (s1 `mod` gd) /= (s2 `mod` gd) = Nothing
-    | (s1 - s2 + l1 * attempt) `mod` l2 == 0 = Just (s1 + l1 * attempt, lcm l1 l2)
+    | (s1 - s2 + l1 * attempt) `mod` l2 == 0 && (s1 - s2 + l1 * attempt) >= 0 = Just (s1 + l1 * attempt, lcm l1 l2)
     | otherwise = combine (attempt + 1) (s1, l1) (s2, l2)
   where
     gd = gcd l1 l2
@@ -59,3 +59,6 @@ part2 lines = foldl1 (\ts1 ts2 -> combinations ts1 ts2 |> map  (uncurry (combine
 
 test :: [String]
 test = [ "LR", "", "11A = (11B, XXX)", "11B = (XXX, 11Z)", "11Z = (11B, XXX)", "22A = (22B, XXX)", "22B = (22C, 22C)", "22C = (22Z, 22Z)", "22Z = (22B, 22B)", "XXX = (XXX, XXX)" ]
+
+test2 = ["L", "", "11A = (11Z, XXX)", "11B = (11Z, XXX)", "11Z = (22A, XXX)", "22A = (22B, XXX)", "22B = (22C, XXX)", "22C = (22Z, XXX)", "22Z = (11B, XXX)", "XXX = (XXX, XXX)"]
+test3 = ["L", "", "AAA = (AAB, XXX)", "AAB = (AAC, XXX)", "AAC = (AAD, XXX)", "AAD = (AAE, XXX)", "AAE = (AAF, XXX)", "AAF = (AAG, XXX)", "AAG = (AAH, XXX)", "AAH = (ZZZ, XXX)", "ZZZ = (ZZZ, XXX)", "BAA = (BAB, XXX)", "BAB = (BAC, XXX)", "BAC = (BAD, XXX)", "BAD = (BAE, XXX)", "BAE = (BAF, XXX)", "BAF = (BAG, XXX)", "BAG = (BAH, XXX)", "BAH = (BAI, XXX)", "BAI = (BAJ, XXX)", "BAJ = (BAK, XXX)", "BAK = (BAL, XXX)", "BAL = (BAM, XXX)", "BAM = (BAN, XXX)", "BAN = (BAO, XXX)", "BAO = (BAP, XXX)", "BAP = (BAQ, XXX)", "BAQ = (BAR, XXX)", "BAR = (BAS, XXX)", "BAS = (BAZ, XXX)", "BAZ = (BAZ, XXX)", "XXX = (XXX, XXX)"]
