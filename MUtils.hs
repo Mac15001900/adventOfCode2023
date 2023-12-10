@@ -1,7 +1,7 @@
--- Version 1.0.0
+-- Version 1.0.1
 module MUtils (
    runOnFile, runTestOnFile, runOnFileGroup,
-   putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, combinations, combinations3, combinationsSelf,
+   putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, replace, replace2, replace3, combinations, combinations3, combinationsSelf,
    (!!?), joinWith, zipWithIndexes, differences, indexes, zipF,
    zipWithIndexes2, empty2, empty3, setElement, setElement2, setElement3, changeElement, changeElement2, changeElement3, directions2D, directions3D, groupInto2D,
    map2, map3, filter2, filter3, zip2d, zip3d, findIndex2,
@@ -119,6 +119,17 @@ uniqueOn'' (a:as) (b:bs) = if b `elem` bs then uniqueOn'' as bs else a:uniqueOn'
 
 indexesWhere :: (a->Bool) -> [a] -> [Int]
 indexesWhere p xs = zipWithIndexes xs |> filter (p . fst) |> map snd
+
+----- Replacing -----
+
+replace :: Eq a => a -> a -> [a] -> [a]
+replace a b = map (\x-> if x==a then b else x)
+
+replace2 :: Eq a => a -> a -> [[a]] -> [[a]]
+replace2 a b = map2 (\x-> if x==a then b else x)
+
+replace3 :: Eq a => a -> a -> [[[a]]] -> [[[a]]]
+replace3 a b = map3 (\x-> if x==a then b else x)
 
 ----- Combinations -----
 
