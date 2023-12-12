@@ -75,7 +75,7 @@ showGrid1 g = Map.map (head . show) g |> showCharGrid
 
 --Pathfinding
 
---Finds a simple orthogonal path between two points, and returns every value along the path, including the starting and ending node
+--Finds a simple orthogonal path between two points, and returns every value along the path, including the starting and ending nodes
 simplePathO  :: Grid a -> Point -> Point -> [a]
 simplePathO g p1 p2 = simplePathO' p1 p2 |> map (g Map.!)
 
