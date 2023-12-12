@@ -1,4 +1,4 @@
--- Version 1.0.1
+-- Version 1.0.2
 module MUtils (
    runOnFile, runTestOnFile, runOnFileGroup,
    putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, replace, replace2, replace3, combinations, combinations3, combinationsSelf,
@@ -9,13 +9,14 @@ module MUtils (
    flattenMaybe, removeNothing,
    repeatF, repeatUntil, examine, examineStr, examineRepeat,
    factorial, (//), nck, valueBetween, mean, meanI, sign,
-   aStar, (|>), readInt
+   aStar, memoizedCount, (|>), readInt
     ) where
 
 import Control.Monad
 import Data.List
 import Data.Maybe
 import System.IO
+import qualified Data.Map as Map
 
 ------------------------------------ File Utils ------------------------------------
 
@@ -378,6 +379,22 @@ insertNode :: [(a, Int, Int)] -> (a, Int, Int) -> [(a, Int, Int)]
 insertNode [] node = [node]
 insertNode ((a1,c1,h1):xs) (a2,c2,h2) = if c2+h2 < c1+h1 then (a2,c2,h2):(a1,c1,h1):xs else (a1,c1,h1):(insertNode xs (a2,c2,h2))
 
+------------------------------------ Memoized counter ------------------------------------
+
+-- Help with counting how many ways something can be done in a memoized way. Takes a function that for a given state returns either
+-- a list of states that need to be summed or an integer indicating the number of possibilities from this state.
+memoizedCount :: Ord a => (a-> Either [a] Integer) -> a -> Integer
+memoizedCount f s = memoizedCount' f s Map.empty |> (Map.! s)
+
+memoizedCount' :: Ord a => (a-> Either [a] Integer) -> a -> Map.Map a Integer -> Map.Map a Integer
+memoizedCount' f s m | Map.member s m = m
+memoizedCount' f s m = case f s of
+   Left as -> case foldl (mcProcessOptions f) (m, 0) as of
+      (newMap, n) -> Map.insert s n newMap
+   Right n -> Map.insert s n m
+
+mcProcessOptions :: Ord a => (a-> Either [a] Integer) -> (Map.Map a Integer, Integer) -> a -> (Map.Map a Integer, Integer)
+mcProcessOptions f (m, n) s = (newMap, n + newMap Map.! s) where newMap = memoizedCount' f s m
 
 ------------------------------------ Misc ------------------------------------
 
