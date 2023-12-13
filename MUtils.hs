@@ -1,9 +1,9 @@
--- Version 1.0.2
+-- Version 1.0.3
 module MUtils (
    runOnFile, runTestOnFile, runOnFileGroup,
    putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, replace, replace2, replace3, combinations, combinations3, combinationsSelf,
    (!!?), joinWith, zipWithIndexes, differences, indexes, zipF,
-   zipWithIndexes2, empty2, empty3, setElement, setElement2, setElement3, changeElement, changeElement2, changeElement3, directions2D, directions3D, groupInto2D,
+   indexes2, zipWithIndexes2, empty2, empty3, setElement, setElement2, setElement3, changeElement, changeElement2, changeElement3, directions2D, directions3D, groupInto2D,
    map2, map3, filter2, filter3, zip2d, zip3d, findIndex2,
    pair, pairS, mapFst, mapSnd, mapBoth, fst3, snd3, thd3, fst4, snd4, thd4, frh4, t2toList, t3toList, t4toList, t5toList, t2fromList, t3fromList, t4fromList, t5fromList,
    flattenMaybe, removeNothing,
@@ -174,6 +174,10 @@ zipF f xs = zip xs (map f xs)
 
 
 ------------------------------------ Higher-dimension List Utils ------------------------------------
+
+indexes2 :: [[a]] -> [(Int, Int)]
+indexes2 [] = []
+indexes2 xs = combinations (indexes (head xs)) (indexes xs)
 
 zipWithIndexes2 :: [[a]] -> [[(a,(Int,Int))]]
 zipWithIndexes2 a =  map zipWithIndexes a |> zipWithIndexes |> map (\(as, y)-> map (\(p, x)-> (p,(x,y))) as)
