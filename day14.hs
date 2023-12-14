@@ -1,6 +1,6 @@
 import           Data.List
 import qualified Data.Map   as Map
-import           Data.Maybe ( fromJust )
+import           Data.Maybe
 import qualified Data.Set   as Set
 
 import           GridUtils
@@ -16,32 +16,28 @@ type Dish = (Cubes, Rocks)
 parse :: [String] -> Dish
 parse lines = (map2 (== '#') lines |> gridFromList, map2 (== 'O') lines |> gridFromList)
 
-moveAll :: Cubes -> Point -> Rocks -> Rocks
-moveAll c dir rocks = if rocks == newRocks then rocks else moveAll c dir newRocks
-  where
-    newRocks = move c dir rocks
-
 move :: Cubes -> Point -> Rocks -> Rocks
-move c dir rocks = Map.toList rocks |> filter snd |> map fst |> foldr (moveRock c dir) rocks
+move c dir rocks = Map.toList rocks |> filter snd |> map fst |> foldl (\r p -> fromMaybe r (moveRock c dir p r)) rocks
 
-moveRock :: Cubes -> Point -> Point -> Rocks -> Rocks
+-- Moves a target rock, together with all rocks it bumps into
+moveRock :: Cubes -> Point -> Point -> Rocks -> Maybe Rocks
 moveRock cubes dir rock rocks
-    | not $ rocks Map.! rock = rocks
-    | Map.notMember newPoint rocks = rocks
-    | cubes Map.! newPoint = rocks
-    | rocks Map.! newPoint = moveRock cubes dir newPoint rocks -- |> Map.insert rock False |> Map.insert newPoint True
-    | otherwise = rocks |> Map.insert rock False |> Map.insert newPoint True |> moveRock cubes dir newPoint
+    | not $ rocks Map.! rock = Nothing
+    | Map.notMember newPoint rocks = Nothing
+    | cubes Map.! newPoint = Nothing
+    | rocks Map.! newPoint = moveRock cubes dir newPoint rocks >>= moveRock cubes dir rock
+    | otherwise = let newRocks = rocks |> Map.insert rock False |> Map.insert newPoint True in fromMaybe newRocks (moveRock cubes dir newPoint newRocks) |> Just
   where
     newPoint = addPoints dir rock
 
 part1 :: [String] -> Int
-part1 lines = moveAll cubes (0, -1) rocks |> Map.toList |> filter snd |> map fst |> map snd |> map (height -) |> sum
+part1 lines = move cubes (0, -1) rocks |> Map.toList |> filter snd |> map fst |> map snd |> map (height -) |> sum
   where
     height = length lines
     (cubes, rocks) = parse lines
 
 partTest :: [String] -> [String]
-partTest lines = moveAll cubes (0, -1) rocks |> showBoard cubes
+partTest lines = move cubes (0, -1) rocks |> showBoard cubes
   where
     height = length lines
     (cubes, rocks) = parse lines
@@ -51,7 +47,7 @@ type History = Map.Map Rocks Integer
 type Period = (Integer, Integer) --Start of period, length of period
 
 runCycle :: Cubes -> Rocks -> Rocks
-runCycle cubes rocks = foldl (flip (moveAll cubes)) rocks [ (0, -1), (-1, 0), (0, 1), (1, 0) ]
+runCycle cubes rocks = foldl (flip (move cubes)) rocks [ (0, -1), (-1, 0), (0, 1), (1, 0) ]
 
 moveALot :: Cubes -> Rocks -> Integer -> History -> Integer -> Rocks
 moveALot cubes rocks target history current
