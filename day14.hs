@@ -8,9 +8,7 @@ import           GridUtils
 import           MUtils
 
 type Cubes = Grid Bool
-
 type Rocks = Grid Bool
-
 type Dish = (Cubes, Rocks)
 
 parse :: [String] -> Dish
@@ -19,7 +17,7 @@ parse lines = (map2 (== '#') lines |> gridFromList, map2 (== 'O') lines |> gridF
 move :: Cubes -> Point -> Rocks -> Rocks
 move c dir rocks = Map.toList rocks |> filter snd |> map fst |> foldl (\r p -> fromMaybe r (moveRock c dir p r)) rocks
 
--- Moves a target rock, together with all rocks it bumps into
+-- Moves a target rock, together with all the rocks it bumps into
 moveRock :: Cubes -> Point -> Point -> Rocks -> Maybe Rocks
 moveRock cubes dir rock rocks
     | not $ rocks Map.! rock = Nothing
@@ -36,15 +34,7 @@ part1 lines = move cubes (0, -1) rocks |> Map.toList |> filter snd |> map fst |>
     height = length lines
     (cubes, rocks) = parse lines
 
-partTest :: [String] -> [String]
-partTest lines = move cubes (0, -1) rocks |> showBoard cubes
-  where
-    height = length lines
-    (cubes, rocks) = parse lines
-
 type History = Map.Map Rocks Integer
-
-type Period = (Integer, Integer) --Start of period, length of period
 
 runCycle :: Cubes -> Rocks -> Rocks
 runCycle cubes rocks = foldl (flip (move cubes)) rocks [ (0, -1), (-1, 0), (0, 1), (1, 0) ]
@@ -68,5 +58,4 @@ showBoard :: Cubes -> Rocks -> [String]
 showBoard c r = zip2d (Map.map (\isCube -> if isCube then '#' else '.') c |> showCharGrid) (Map.map (\isRock -> if isRock then 'O' else '.') r |> showCharGrid)
     |> map2 (\(c, r) -> if c == '#' then '#' else r)
 
-    --zip2d (showGrid c) (showGrid r) |> map (splitOn '|') |> map2 (mapBoth read) |> map2 (\(isCube, isRock)-> if isCube then '#' else if isRock then 'O' else '.')
 test = [ "O....#....", "O.OO#....#", ".....##...", "OO.#O....O", ".O.....O#.", "O.#..O.#.#", "..O..#O..O", ".......O..", "#....###..", "#OO..#...." ]
