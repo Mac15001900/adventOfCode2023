@@ -2,7 +2,8 @@ module GridUtils (gridFromList, neighbourMapO, neighbourMapD, neighbourMap, buil
     getValue, changeValue, getNeighbours, addPoints,
     gridBounds, showCharGrid, showStringGrid, showGrid, showGrid1,
     simplePathO, simplePathO',
-    Grid, NeighbourMap, Point, Point3) where
+    rotateDirC, rotateDirA, flipDir, moveDir, stepDir, deflectDir, followDirPath, dirToPoint, pointToDirs, isHorizontal, isVertical,
+    Grid, NeighbourMap, Point, Point3, Dir (East, West , North , South)) where
 import MUtils
 import qualified Data.Map as Map
 import Data.List
@@ -87,10 +88,79 @@ simplePathO' p1@(x1,y1) p2@(x2,y2)
     | x1>x2            = p1 : simplePathO' (x1-1, y1) p2
     | x1<x2            = p1 : simplePathO' (x1+1, y1) p2
 
+
 ---------- Dir stuff ----------
 
 data Dir = East | West | North | South deriving (Show, Read, Eq, Ord)
 
+--Rotates a direction clockwise
+rotateDirC :: Dir -> Dir
+rotateDirC North = West
+rotateDirC South = East
+rotateDirC East = North
+rotateDirC West = South
+
+--Rotates a direction antilockwise
+rotateDirA :: Dir -> Dir
+rotateDirA North = East
+rotateDirA South = West
+rotateDirA West = North
+rotateDirA East = South
+
+--Flips a directions
+flipDir :: Dir -> Dir
+flipDir North = South
+flipDir South = North
+flipDir West  = East
+flipDir East  = West
+
+--Checks if a direction is equal to East or West
+isHorizontal :: Dir -> Bool
+isHorizontal dir = dir `elem` [East, West]
+
+--Checks if a direction is equal to North or South
+isVertical :: Dir -> Bool
+isVertical dir = dir `elem` [North, South]
+
+
+--Deflects a direction; if the given direction belong to the specified pair, the other direction from the pair is returned
+deflectDir :: (Dir, Dir) -> Dir -> Maybe Dir
+deflectDir (a,b) c
+    | a==c = Just b
+    | b==c = Just a
+    | otherwise = Nothing
+
+--Move a point in a given direction by a specified distance
+moveDir :: Dir -> Int -> Point -> Point
+moveDir  North n (x, y) = (x, y-n)
+moveDir  South n (x, y) = (x, y+n)
+moveDir  West  n (x, y) = (x-n, y)
+moveDir  East  n (x, y) = (x+n, y)
+
+--Moves a point one step in a given direction
+stepDir :: Dir -> Point -> Point
+stepDir dir = moveDir dir 1
+
+--Moves a point by every direction in a list
+followDirPath :: [Dir] -> Point -> Point
+followDirPath dirs point = foldr stepDir point dirs
+
+--Converts a dir to a point indicating that direction
+dirToPoint :: Dir -> Point
+dirToPoint North = (0,-1)
+dirToPoint South = (0,1)
+dirToPoint East = (-1,0)
+dirToPoint West = (1,0)
+
+--Converts a point to a list of directions corresponding to that displacement
+pointToDirs :: Point -> [Dir]
+pointToDirs (0,0) = []
+pointToDirs (x,0)
+    | x>0 = West : pointToDirs (x-1,0)
+    | x<0 = East : pointToDirs (x+1,0)
+pointToDirs (x,y)
+    | y>0 = North : pointToDirs (x, y-1)
+    | y<0 = South : pointToDirs (x, y+1)
 
 
 
