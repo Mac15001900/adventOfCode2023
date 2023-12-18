@@ -3,7 +3,7 @@ import qualified Data.Map   as Map
 import           Data.Maybe
 import qualified Data.Set   as Set
 
-import           GridUtils
+import           GridUtils  hiding ( Dir, dirToPoint )
 
 import           MUtils
 
