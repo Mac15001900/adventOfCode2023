@@ -33,7 +33,7 @@ buildNeighbours directions grid point =  directions |> map (addPoints point) |> 
 hasNeighbour :: (a->Bool) -> Point -> NeighbourMap a -> Bool
 hasNeighbour p (x,y) m = m Map.! (x,y) |> snd |> map snd |> filter p |> length |> (>0)
 
-addPoints :: Point -> Point -> Point
+addPoints :: Num a => (a,a) -> (a,a) -> (a,a)
 addPoints (x1,y1) (x2,y2) = (x1+x2, y1+y2)
 
 getValue :: NeighbourMap a -> Point -> a
@@ -57,8 +57,8 @@ directionsO3 = [(1,0,0), (-1,0,0), (0,1,0), (0,-1,0), (0,0,1), (0,0,-1)]
 directionsD3 :: [(Int,Int,Int)]
 directionsD3 = [(-1,-1,-1),(-1,-1,0),(-1,-1,1),(-1,0,-1),(-1,0,0),(-1,0,1),(-1,1,-1),(-1,1,0),(-1,1,1),(0,-1,-1),(0,-1,0),(0,-1,1),(0,0,-1),(0,0,1),(0,1,-1),(0,1,0),(0,1,1),(1,-1,-1),(1,-1,0),(1,-1,1),(1,0,-1),(1,0,0),(1,0,1),(1,1,-1),(1,1,0),(1,1,1)]
 
-pointDistanceO :: Point -> Point -> Int
-pointDistanceO (x1,y1) (x2,y2) = abs (x1-x2) + abs (y1-y1)
+pointDistanceO :: Num a => (a,a) -> (a,a) -> a
+pointDistanceO (x1,y1) (x2,y2) = abs (x1-x2) + abs (y1-y2)
 
 gridBounds :: Grid a -> (Int,Int)
 gridBounds g = (map fst g' |> map fst |> maximum, map fst g' |> map snd |> maximum) where g' = Map.toList g
@@ -134,7 +134,7 @@ deflectDir (a, b) c
     | otherwise = Nothing
 
 --Move a point in a given direction by a specified distance
-moveDir :: Dir -> Int -> Point -> Point
+moveDir :: Integral a => Dir -> a -> (a,a) -> (a,a)
 moveDir North n (x, y) = (x, y - n)
 moveDir South n (x, y) = (x, y + n)
 moveDir West n (x, y) = (x - n, y)

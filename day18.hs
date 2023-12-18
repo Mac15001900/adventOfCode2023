@@ -1,32 +1,40 @@
 {-# LANGUAGE TupleSections #-}
 
+import           Data.Char ( digitToInt )
+import           Numeric   ( readHex )
 import qualified Data.Map  as Map
-import qualified Data.Set  as Set
-
-import           GridUtils
-
+import           GridUtils hiding ( Point )
 import           MUtils
 
-type Trench = Set.Set Point
-
-type Instruction = (Dir, Int)
-
-digTrench :: Point -> Trench -> [Instruction] -> Trench
-digTrench _ t [] = t
-digTrench p t ((d, 0) : is) = digTrench p t is
-digTrench p t ((d, l) : is) = digTrench (stepDir d p) (Set.insert p t) ((d, l - 1) : is)
+type Point = (Integer, Integer)
+type Instruction = (Dir, Integer)
 
 parseInstruction :: String -> Instruction
 parseInstruction line = splitOn ' ' line |> take 2 |> t2fromList |> mapSnd read |> mapFst (Map.fromList [ ("R", East), ("L", West), ("U", North), ("D", South) ] Map.!)
 
---https://xkcd.com/2021/
-countArea :: Point -> Trench -> Int
-countArea start trench = bfsAllCosts (\p -> directionsO |> map (addPoints p) |> filter (`Set.notMember` trench) |> map (, 1)) start |> Map.size
+parseInstruction2 :: String -> Instruction
+parseInstruction2 line = splitOn ' ' line |> (!! 2) |> filter (`notElem` "()#") |> \n -> (last n, init n) |> mapFst digitToInt
+    |> mapFst ([ East, South, West, North ] !!) |> mapSnd (fst . head . readHex)
 
-part1 :: [String] -> Int
-part1 lines = countArea (0, -1) trench + Set.size trench
-  where
-    trench = map parseInstruction lines |> digTrench (0, 0) Set.empty
+buildPath :: [Point] -> [Instruction] -> [Point]
+buildPath path [] = path
+buildPath (p : ps) ((dir, n) : is) = buildPath (moveDir dir n p : p : ps) is
+
+--Using shoelace fomula for the area - this underestimates each edge point by 0.5, so we add half the path length to compensate.
+--It also underestimates each corner by 0.25 or 0.75 - since there's 4 more turns towards the inside, to compensate we add 1 at the end
+countArea :: [Point] -> Integer
+countArea points = zip points (tail points ++ [ head points ]) |> map (\((x1, y1), (x2, y2)) -> x1 * y2 - x2 * y1) |> sum |> abs
+    |> (+ lineLength points) |> (`div` 2) |> (+ 1)
+
+lineLength :: [Point] -> Integer
+lineLength [p] = 0
+lineLength (p1 : p2 : ps) = pointDistanceO p1 p2 + lineLength (p2 : ps)
+
+part1 :: [String] -> Integer
+part1 lines = map parseInstruction lines |> buildPath [ (0, 0) ] |> countArea
+
+part2 :: [String] -> Integer
+part2 lines = map parseInstruction2 lines |> buildPath [ (0, 0) ] |> countArea
 
 test = [ "R 6 (#70c710)"
        , "D 5 (#0dc571)"
