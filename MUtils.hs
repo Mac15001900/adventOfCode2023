@@ -1,4 +1,4 @@
--- Version 1.0.4
+-- Version 1.0.5
 module MUtils (
    runOnFile, runTestOnFile, runOnFileGroup,
    putList,putListToStr, split, splitOn, count, count2, countEqual, maxOn, minOn, unique, unique', uniqueOn, indexesWhere, replace, replace2, replace3, replaceIf, replaceIf2, replaceIf3, combinations, combinations3, combinationsSelf,
@@ -9,7 +9,7 @@ module MUtils (
    flattenMaybe, removeNothing,
    repeatF, repeatUntil, examine, examineStr, examineRepeat,
    factorial, (//), nck, valueBetween, mean, meanI, sign,
-   aStar, memoizedCount, (|>), readInt
+   aStar, bfsAllCosts, memoizedCount, (|>), readInt
     ) where
 
 import Control.Monad
@@ -17,6 +17,7 @@ import Data.List
 import Data.Maybe
 import System.IO
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 ------------------------------------ File Utils ------------------------------------
 
@@ -369,21 +370,21 @@ sign x
 ------------------------------------ A* ------------------------------------
 
 --               Neighbours         Heuristic  Start  isTarget    Cost of shortest path
-aStar :: Eq a => (a->[(a, Int)]) -> (a->Int) -> a -> (a->Bool) -> Int
+aStar :: Ord a => (a->[(a, Int)]) -> (a->Int) -> a -> (a->Bool) -> Int
 aStar neighbours heuristic start target = fromMaybe (error "aStar: No path found") res
-   where res = aStar' neighbours heuristic [(start, 0, heuristic start)] [] target
+   where res = aStar' neighbours heuristic [(start, 0, heuristic start)] Set.empty target
 
-tryAStar :: Eq a => (a->[(a, Int)]) -> (a->Int) -> a -> (a->Bool) -> Maybe Int
-tryAStar neighbours heuristic start target = aStar' neighbours heuristic [(start, 0, heuristic start)] [] target
+tryAStar :: Ord a => (a->[(a, Int)]) -> (a->Int) -> a -> (a->Bool) -> Maybe Int
+tryAStar neighbours heuristic start target = aStar' neighbours heuristic [(start, 0, heuristic start)] Set.empty target
 
---                neighbours        heuristic    frontier          visited  isTarget
-aStar' :: Eq a => (a->[(a, Int)]) -> (a->Int) -> [(a, Int, Int)] ->  [a] -> (a->Bool) -> Maybe Int
+--                neighbours        heuristic    frontier           visited      isTarget
+aStar' :: Ord a => (a->[(a, Int)]) -> (a->Int) -> [(a, Int, Int)] -> Set.Set a -> (a->Bool) -> Maybe Int
 aStar' _  _ []              _  _ = Nothing --The frontier being empty means we've explored everything
 aStar' ns h (next:frontier) vs t
-   | t (fst3 next)         = Just (snd3 next)
-   | (fst3 next) `elem` vs = aStar' ns h frontier vs t
-   | otherwise             = aStar' ns h (expandFrontier frontier newNodes) ((fst3 next):vs) t where
-      newNodes = ns (fst3 next) |> filter (\(a,_)-> a `notElem` vs) |> map (\(a,c) -> (a, c + snd3 next, h a))
+   | t (fst3 next)             = Just (snd3 next)
+   | Set.member (fst3 next) vs = aStar' ns h frontier vs t
+   | otherwise                 = aStar' ns h (expandFrontier frontier newNodes) (Set.insert (fst3 next) vs) t where
+      newNodes = ns (fst3 next) |> filter (\(a,_)-> a `Set.notMember` vs) |> map (\(a,c) -> (a, c + snd3 next, h a))
 
 expandFrontier :: [(a, Int, Int)] -> [(a, Int, Int)] -> [(a, Int, Int)]
 expandFrontier frontier newNodes = foldl insertNode frontier newNodes
@@ -391,6 +392,23 @@ expandFrontier frontier newNodes = foldl insertNode frontier newNodes
 insertNode :: [(a, Int, Int)] -> (a, Int, Int) -> [(a, Int, Int)]
 insertNode [] node = [node]
 insertNode ((a1,c1,h1):xs) (a2,c2,h2) = if c2+h2 < c1+h1 then (a2,c2,h2):(a1,c1,h1):xs else (a1,c1,h1):(insertNode xs (a2,c2,h2))
+
+--Does bfs and returns a map with the cost of getting to each state. Useful for setting up heuristics for later aStar traversal with more restrictions
+bfsAllCosts :: Ord a => (a->[(a, Int)]) -> a -> Map.Map a Int
+bfsAllCosts neighbours start = bfsAllCosts' neighbours [(start,0)] Set.empty Map.empty
+
+bfsAllCosts' :: Ord a => (a->[(a, Int)]) ->  [(a, Int)] -> Set.Set a -> Map.Map a Int -> Map.Map a Int
+bfsAllCosts' n [] _ m = m
+bfsAllCosts' n (next:frontier) visited m
+   | Set.member (fst next) visited = bfsAllCosts' n frontier visited m
+   | otherwise = bfsAllCosts' n newFrontier (Set.insert (fst next) visited) (uncurry Map.insert next m)  where
+      newFrontier = n (fst next) |> map (mapSnd (+snd next)) |> filter ((`Set.notMember` visited) . fst) |> foldl insertNodeBfs frontier
+
+insertNodeBfs :: [(a, Int)] -> (a, Int) -> [(a, Int)]
+insertNodeBfs [] node = [node]
+insertNodeBfs ((a1,c1):xs) (a2,c2)
+   | c2 < c1 = (a2,c2):(a1,c1):xs
+   | otherwise =  (a1,c1):insertNodeBfs xs (a2,c2)
 
 ------------------------------------ Memoized counter ------------------------------------
 

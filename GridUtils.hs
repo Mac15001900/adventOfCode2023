@@ -1,6 +1,6 @@
 module GridUtils (gridFromList, neighbourMapO, neighbourMapD, neighbourMap, buildNeighbours, directionsO, directionsD, directionsO3, directionsD3,
     getValue, changeValue, getNeighbours, addPoints,
-    gridBounds, showCharGrid, showStringGrid, showGrid, showGrid1,
+    pointDistanceO, gridBounds, showCharGrid, showStringGrid, showGrid, showGrid1,
     simplePathO, simplePathO',
     rotateDirC, rotateDirA, flipDir, moveDir, stepDir, deflectDir, followDirPath, dirToPoint, pointToDirs, isHorizontal, isVertical,
     Grid, NeighbourMap, Point, Point3, Dir (East, West , North , South)) where
@@ -57,6 +57,9 @@ directionsO3 = [(1,0,0), (-1,0,0), (0,1,0), (0,-1,0), (0,0,1), (0,0,-1)]
 directionsD3 :: [(Int,Int,Int)]
 directionsD3 = [(-1,-1,-1),(-1,-1,0),(-1,-1,1),(-1,0,-1),(-1,0,0),(-1,0,1),(-1,1,-1),(-1,1,0),(-1,1,1),(0,-1,-1),(0,-1,0),(0,-1,1),(0,0,-1),(0,0,1),(0,1,-1),(0,1,0),(0,1,1),(1,-1,-1),(1,-1,0),(1,-1,1),(1,0,-1),(1,0,0),(1,0,1),(1,1,-1),(1,1,0),(1,1,1)]
 
+pointDistanceO :: Point -> Point -> Int
+pointDistanceO (x1,y1) (x2,y2) = abs (x1-x2) + abs (y1-y1)
+
 gridBounds :: Grid a -> (Int,Int)
 gridBounds g = (map fst g' |> map fst |> maximum, map fst g' |> map snd |> maximum) where g' = Map.toList g
 
@@ -91,7 +94,8 @@ simplePathO' p1@(x1,y1) p2@(x2,y2)
 
 ---------- Dir stuff ----------
 
-data Dir = East | West | North | South deriving (Show, Read, Eq, Ord)
+data Dir = East | West | North | South
+    deriving ( Show, Read, Eq, Ord )
 
 --Rotates a direction clockwise
 rotateDirC :: Dir -> Dir
@@ -111,31 +115,30 @@ rotateDirA East = South
 flipDir :: Dir -> Dir
 flipDir North = South
 flipDir South = North
-flipDir West  = East
-flipDir East  = West
+flipDir West = East
+flipDir East = West
 
 --Checks if a direction is equal to East or West
 isHorizontal :: Dir -> Bool
-isHorizontal dir = dir `elem` [East, West]
+isHorizontal dir = dir `elem` [ East, West ]
 
 --Checks if a direction is equal to North or South
 isVertical :: Dir -> Bool
-isVertical dir = dir `elem` [North, South]
-
+isVertical dir = dir `elem` [ North, South ]
 
 --Deflects a direction; if the given direction belong to the specified pair, the other direction from the pair is returned
 deflectDir :: (Dir, Dir) -> Dir -> Maybe Dir
-deflectDir (a,b) c
-    | a==c = Just b
-    | b==c = Just a
+deflectDir (a, b) c
+    | a == c = Just b
+    | b == c = Just a
     | otherwise = Nothing
 
 --Move a point in a given direction by a specified distance
 moveDir :: Dir -> Int -> Point -> Point
-moveDir  North n (x, y) = (x, y-n)
-moveDir  South n (x, y) = (x, y+n)
-moveDir  West  n (x, y) = (x-n, y)
-moveDir  East  n (x, y) = (x+n, y)
+moveDir North n (x, y) = (x, y - n)
+moveDir South n (x, y) = (x, y + n)
+moveDir West n (x, y) = (x - n, y)
+moveDir East n (x, y) = (x + n, y)
 
 --Moves a point one step in a given direction
 stepDir :: Dir -> Point -> Point
@@ -147,21 +150,20 @@ followDirPath dirs point = foldr stepDir point dirs
 
 --Converts a dir to a point indicating that direction
 dirToPoint :: Dir -> Point
-dirToPoint North = (0,-1)
-dirToPoint South = (0,1)
-dirToPoint East = (-1,0)
-dirToPoint West = (1,0)
+dirToPoint North = (0, -1)
+dirToPoint South = (0, 1)
+dirToPoint East = (-1, 0)
+dirToPoint West = (1, 0)
 
 --Converts a point to a list of directions corresponding to that displacement
 pointToDirs :: Point -> [Dir]
-pointToDirs (0,0) = []
-pointToDirs (x,0)
-    | x>0 = West : pointToDirs (x-1,0)
-    | x<0 = East : pointToDirs (x+1,0)
-pointToDirs (x,y)
-    | y>0 = North : pointToDirs (x, y-1)
-    | y<0 = South : pointToDirs (x, y+1)
-
+pointToDirs (0, 0) = []
+pointToDirs (x, 0)
+    | x > 0 = West : pointToDirs (x - 1, 0)
+    | x < 0 = East : pointToDirs (x + 1, 0)
+pointToDirs (x, y)
+    | y > 0 = North : pointToDirs (x, y - 1)
+    | y < 0 = South : pointToDirs (x, y + 1)
 
 
 
